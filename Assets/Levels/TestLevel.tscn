@@ -1,17 +1,21 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://Assets/Character/Character.tscn" type="PackedScene" id=1]
+[ext_resource path="res://Assets/Character/PlayerCharacter.cs" type="Script" id=2]
+[ext_resource path="res://Assets/Character/AICharacter.tscn" type="PackedScene" id=3]
 
 [sub_resource type="RectangleShape2D" id=1]
-extents = Vector2( 601.665, 54.0647 )
+extents = Vector2( 186.199, 54.0647 )
+
+[sub_resource type="RectangleShape2D" id=2]
 
 [node name="Node2D" type="Node2D"]
 
 [node name="ColorRect2" type="ColorRect" parent="."]
-margin_left = -332.895
-margin_top = -58.2163
-margin_right = -249.895
-margin_bottom = -1.21631
+margin_left = -248.0
+margin_top = -21.0
+margin_right = -228.0
+margin_bottom = -1.0
 color = Color( 0.282353, 0.113725, 0.113725, 1 )
 __meta__ = {
 "_edit_use_anchors_": false
@@ -19,25 +23,32 @@ __meta__ = {
 
 [node name="Character" parent="." instance=ExtResource( 1 )]
 position = Vector2( -213.235, -68.1067 )
-
-[node name="Character2" parent="." instance=ExtResource( 1 )]
-position = Vector2( -161.117, -21.78 )
-ControlledByPlayed = false
-Health = 1
+script = ExtResource( 2 )
 
 [node name="ColorRect" type="ColorRect" parent="."]
-margin_left = -886.0
-margin_top = 1.0
-margin_right = 554.0
-margin_bottom = 62.0
+margin_left = -1492.29
+margin_top = -0.681793
+margin_right = -52.2861
+margin_bottom = 60.3182
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="Ground" type="StaticBody2D" parent="."]
+[node name="Ground" type="StaticBody2D" parent="." groups=[
+"Ground",
+]]
 collision_layer = 3
 collision_mask = 3
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Ground"]
 position = Vector2( -239.385, 54.1766 )
 shape = SubResource( 1 )
+
+[node name="StaticBody2D" type="StaticBody2D" parent="Ground"]
+position = Vector2( -238.125, -10.7093 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ground/StaticBody2D"]
+shape = SubResource( 2 )
+
+[node name="Character2" parent="." instance=ExtResource( 3 )]
+position = Vector2( -149.048, -24.9054 )

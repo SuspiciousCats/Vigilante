@@ -1,6 +1,10 @@
 using Godot;
 using System;
 
+/**
+ * This class is base for every character in the game.
+ * This class implements basic features like walking, attaking,being damaged etc.
+ * */
 public class Character : KinematicBody2D
 {
 	public enum MovementType
@@ -20,6 +24,9 @@ public class Character : KinematicBody2D
 	#region ExportVaribles
 
 	[Export]
+	/**
+	 * How fast will character fall
+	 */
 	public float Gravity = 500f;
 	
 	
@@ -40,12 +47,6 @@ public class Character : KinematicBody2D
 
 	[Export]
 	public float JumpForce = -300f;
-
-	[Export]
-	public bool ControlledByPlayed = true;
-
-	[Export]
-	public float AttackResetTime = 0.5f;
 
 	[Export]
 	public int Health = 5;
@@ -74,9 +75,7 @@ public class Character : KinematicBody2D
 
 	protected AnimatedSprite animatedSprite;
 
-	protected Timer attackResetTimer;
-
-	private bool _firstAttack = true;
+	
 
 	protected Area2D attackArea;
 
@@ -155,7 +154,7 @@ public class Character : KinematicBody2D
 		}
 	}
 
-	protected void SetCharacterMovementScale(Vector2 scale)
+	protected virtual void SetCharacterMovementScale(Vector2 scale)
 	{
 		animatedSprite.Scale = scale;
 		attackArea.Scale = scale;
@@ -173,7 +172,6 @@ public class Character : KinematicBody2D
 		{
 			isPlayingAnim = true;
 			animatedSprite.Play(animationName);
-			GD.Print("Character " + Name + " is playing animation: " + animationName);
 		}
 	}
 
@@ -191,81 +189,16 @@ public class Character : KinematicBody2D
 		}
 	}
 
+	protected virtual bool isRunning()
+	{
+		return false;
+	}
+
 	public override void _Ready()
 	{
 		base._Ready();
 		animatedSprite = GetNode<AnimatedSprite>("AnimatedSprite") ?? throw new NullReferenceException("Fatal Error! All characters need to have animated sprite");
 		attackArea = GetNode<Area2D>("AttackArea") ?? throw new NullReferenceException("Fatal Error! All characters need to have attack area");
-		if (attackResetTimer == null)
-		{
-			attackResetTimer = new Timer();
-			attackResetTimer.WaitTime = AttackResetTime;
-			attackResetTimer.Connect("timeout", this, "ResetAttack");
-			AddChild(attackResetTimer);
-		}
-		GetNode<Camera2D>("Camera2D").Current = ControlledByPlayed;
-
-
-	}
-
-	protected void ResetAttack()
-	{
-		//GD.Print("ResetAttack");
-		currentAttackCount = 0;
-		attackResetTimer.Stop();
-	}
-
-	protected virtual void UpdateInput(float delta)
-	{
-		
-		if (CanUpdateAnimation())
-		{
-			//only update velocity if we are on the ground where we can control it
-			//we also don't reset it, this way player's landing postion will be based on how fast were they running
-			if (lastIsOnTheGround)
-			{
-				//reset velocity, because movement is meant to be snappy
-				velocity.x = 0;
-
-				if (Input.IsActionPressed("move_right"))
-				{
-					//is player is holding run we start to run
-					//Note: player can not run in the air so we prevent that
-					velocity.x += MovementSpeed * (Input.IsActionPressed("run")? 2 : 1);
-				}
-
-				if (Input.IsActionPressed("move_left"))
-				{
-					velocity.x -= MovementSpeed * (Input.IsActionPressed("run")? 2 : 1);
-				}
-
-				if (Input.IsActionJustPressed("jump"))
-				{
-					velocity.y += JumpForce;
-					PlayAnimation("Jump_Start");
-				}
-			}
-		}
-
-		if (Input.IsActionJustPressed("attack") && !isAttacking)
-		{
-			
-			animatedSprite.Play(GetAttackAnimation());
-			
-			isAttacking = true;
-			_firstAttack = false;
-
-			var enemies = attackArea.GetOverlappingBodies();
-			foreach(Node2D enemy in enemies)
-			{
-				if(enemy.IsInGroup("Character"))
-				{
-					enemy.Call("BeDamaged",this,currentAttackCount, 1/*damage*/);
-				}
-			}
-			currentAttackCount++;
-			attackResetTimer.Paused = true;
-		}
 	}
 
 	protected void UpdateMovementState()
@@ -274,7 +207,7 @@ public class Character : KinematicBody2D
 		{
 			if (Mathf.Abs(velocity.x) > 1)
 			{
-				movementState = Input.IsActionPressed("run") ? MovementType.Run : MovementType.Walk;
+				movementState = isRunning() ? MovementType.Run : MovementType.Walk;
 			}
 			else
 			{
@@ -291,10 +224,7 @@ public class Character : KinematicBody2D
 	{
 		base._PhysicsProcess(delta);
 
-		if (ControlledByPlayed)
-		{
-			UpdateInput(delta);
-		}
+		
 
 		if(lastIsOnTheGround != IsOnFloor() && IsOnFloor())//not using collision detection because this is simplier
 		{
@@ -348,17 +278,13 @@ public class Character : KinematicBody2D
 		}
 	}
 
+	protected virtual void onAnimatedSpriteAnimationFinished() { }
 	private void _on_AnimatedSprite_animation_finished()
 	{
+		onAnimatedSpriteAnimationFinished();
 		isAttacking = false;
 		isBeingDamaged = false;
 
 		isPlayingAnim = false;
-
-		attackResetTimer.Paused = false;
-		if (attackResetTimer.IsStopped() || _firstAttack)
-		{
-			attackResetTimer.Start();
-		}
 	}
 }

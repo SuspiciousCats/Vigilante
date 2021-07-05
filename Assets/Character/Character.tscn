@@ -18,7 +18,7 @@ DeathPhysicsMask = 2
 [node name="AnimatedSprite" type="AnimatedSprite" parent="."]
 frames = ExtResource( 1 )
 animation = "Jump_Start"
-frame = 4
+frame = 6
 playing = true
 
 [node name="Camera2D" type="Camera2D" parent="."]
