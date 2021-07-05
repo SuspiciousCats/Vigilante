@@ -223,6 +223,8 @@ public class Character : KinematicBody2D
 		}
 	}
 
+	protected virtual void Attack() { }
+
 	public override void _PhysicsProcess(float delta)
 	{
 		base._PhysicsProcess(delta);
@@ -281,10 +283,10 @@ public class Character : KinematicBody2D
 		}
 	}
 
-	protected virtual void onAnimatedSpriteAnimationFinished() { }
+	protected virtual void onAnimatedSpriteAnimationFinished(string animName) { }
 	private void _on_AnimatedSprite_animation_finished()
 	{
-		onAnimatedSpriteAnimationFinished();
+		onAnimatedSpriteAnimationFinished(animatedSprite.Animation);
 		isAttacking = false;
 		isBeingDamaged = false;
 

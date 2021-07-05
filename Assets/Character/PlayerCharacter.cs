@@ -1,4 +1,4 @@
-﻿using Godot;
+using Godot;
 using System;
 
 /**
@@ -25,7 +25,7 @@ public class PlayerCharacter : Character
 
 
 	public override void _Ready()
-    {
+	{
 		base._Ready();
 		if (attackResetTimer == null)
 		{
@@ -38,12 +38,33 @@ public class PlayerCharacter : Character
 		GetNode<Camera2D>("Camera2D").Current = ControlledByPlayed;
 	}
 
-    protected override bool isRunning()
-    {
+	protected override bool isRunning()
+	{
 		return Input.IsActionPressed("run");
 
 	}
-    protected virtual void UpdateInput(float delta)
+
+	protected override void Attack()
+	{
+		base.Attack();
+
+		animatedSprite.Play(GetAttackAnimation());
+
+		isAttacking = true;
+		_firstAttack = false;
+
+		var enemies = attackArea.GetOverlappingBodies();
+		foreach (Node2D enemy in enemies)
+		{
+			if (enemy.IsInGroup("Character"))
+			{
+				enemy.Call("BeDamaged", this, currentAttackCount, 1/*damage*/);
+			}
+		}
+		currentAttackCount++;
+		attackResetTimer.Paused = true;
+	}
+	protected virtual void UpdateInput(float delta)
 	{
 
 		if (CanUpdateAnimation())
@@ -77,28 +98,13 @@ public class PlayerCharacter : Character
 
 		if (Input.IsActionJustPressed("attack") && !isAttacking)
 		{
-
-			animatedSprite.Play(GetAttackAnimation());
-
-			isAttacking = true;
-			_firstAttack = false;
-
-			var enemies = attackArea.GetOverlappingBodies();
-			foreach (Node2D enemy in enemies)
-			{
-				if (enemy.IsInGroup("Character"))
-				{
-					enemy.Call("BeDamaged", this, currentAttackCount, 1/*damage*/);
-				}
-			}
-			currentAttackCount++;
-			attackResetTimer.Paused = true;
+			Attack();
 		}
 	}
 
-    protected override void onAnimatedSpriteAnimationFinished()
-    {
-        base.onAnimatedSpriteAnimationFinished();
+	protected override void onAnimatedSpriteAnimationFinished(string animName)
+	{
+		base.onAnimatedSpriteAnimationFinished(animName);
 		attackResetTimer.Paused = false;
 		if (attackResetTimer.IsStopped() || _firstAttack)
 		{
@@ -106,13 +112,13 @@ public class PlayerCharacter : Character
 		}
 	}
 
-    public override void _PhysicsProcess(float delta)
-    {
+	public override void _PhysicsProcess(float delta)
+	{
 		if (ControlledByPlayed)
 		{
 			UpdateInput(delta);
 		}
 		base._PhysicsProcess(delta);
-    }
+	}
 }
 

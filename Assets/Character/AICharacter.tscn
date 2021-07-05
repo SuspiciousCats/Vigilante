@@ -1,10 +1,13 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://Assets/Character/Character.tscn" type="PackedScene" id=1]
 [ext_resource path="res://Assets/Character/AICharacter.cs" type="Script" id=2]
 
 [sub_resource type="RectangleShape2D" id=1]
-extents = Vector2( 7.96622, 3.58037 )
+extents = Vector2( 3.47129, 3.58037 )
+
+[sub_resource type="RectangleShape2D" id=2]
+extents = Vector2( 5.83682, 18.8028 )
 
 [node name="Character" instance=ExtResource( 1 )]
 script = ExtResource( 2 )
@@ -17,18 +20,36 @@ __meta__ = {
 }
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="FloorDetection" index="0"]
-position = Vector2( 21.0425, 21.1959 )
+position = Vector2( 16.9221, 21.3832 )
 shape = SubResource( 1 )
 
 [node name="ColorRect" type="ColorRect" parent="FloorDetection" index="1"]
 margin_left = 13.0
 margin_top = 17.0
-margin_right = 29.0
+margin_right = 19.0
 margin_bottom = 25.0
 color = Color( 0, 0, 0, 0.423529 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="AttackDetectionArea" type="Area2D" parent="." index="6"]
+
+[node name="ColorRect" type="ColorRect" parent="AttackDetectionArea" index="0"]
+margin_left = 11.0
+margin_top = -18.0
+margin_right = 23.0
+margin_bottom = 19.0
+color = Color( 0.592157, 0.054902, 0.054902, 0.415686 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackDetectionArea" index="1"]
+position = Vector2( 16.9913, 0.71701 )
+shape = SubResource( 2 )
+
 [connection signal="body_entered" from="FloorDetection" to="." method="_on_FloorDetection_body_entered"]
 [connection signal="body_exited" from="FloorDetection" to="." method="_on_FloorDetection_body_exited"]
+[connection signal="body_entered" from="AttackDetectionArea" to="." method="_on_AttackDetectionArea_body_entered"]
+[connection signal="body_exited" from="AttackDetectionArea" to="." method="_on_AttackDetectionArea_body_exited"]

@@ -15,20 +15,39 @@ public class AICharacter : Character
 	[Export]
 	public bool WalkRight = true;
 
+	[Export]
+	public float AttackRepeatTime = 0.5f;
+
 	protected bool canWalk = true;
 
 	protected Area2D groundDetection;
 
+	protected Area2D attackDetectionArea;
+
 	protected Timer turnAroundWaitTimer;
+
+	protected Timer attackRepeatTimer;
+
+	protected RandomNumberGenerator random = new RandomNumberGenerator();
 
 	public override void _Ready()
 	{
 		base._Ready();
 		groundDetection = GetNodeOrNull<Area2D>("FloorDetection") ?? throw new NullReferenceException("AI characters need to have ground detection Area2D to be able to walk");
 
+		attackDetectionArea = GetNodeOrNull<Area2D>("AttackDetectionArea");
+		if (attackDetectionArea == null)
+		{
+			GD.PrintErr("AI will not be able to fight because there is no attack detection area found");
+		}
+
 		turnAroundWaitTimer = new Timer();
 		turnAroundWaitTimer.Connect("timeout", this, nameof(TurnAround));
 		AddChild(turnAroundWaitTimer);
+
+		attackRepeatTimer = new Timer();
+		attackRepeatTimer.Connect("timeout", this, nameof(Attack));
+		AddChild(attackRepeatTimer);
 	}
 
 	protected override void SetCharacterMovementScale(Vector2 scale)
@@ -37,6 +56,7 @@ public class AICharacter : Character
 		if (Mathf.Abs(scale.x) >= 1 && Mathf.Abs(scale.y) >= 1)
 		{
 			groundDetection.Scale = scale;
+			attackDetectionArea.Scale = scale;
 		}
 	}
 
@@ -49,9 +69,30 @@ public class AICharacter : Character
 
 	public override void _PhysicsProcess(float delta)
 	{
-		base._PhysicsProcess(delta);
 		//we only need to set the speed with which the charcater is walking
 		velocity.x = canWalk ? MovementSpeed * (WalkRight ? 1 : -1) : 0;
+		base._PhysicsProcess(delta);
+	}
+
+	protected override void Attack()
+	{
+		base.Attack();
+		isAttacking = true;
+		//attack the player
+		random.Randomize();
+
+		currentAttackCount = random.RandiRange(0, 2);
+		PlayAnimation(GetAttackAnimation());
+
+		attackRepeatTimer?.Stop();
+
+		foreach(PhysicsBody2D body in attackDetectionArea.GetOverlappingBodies())
+		{
+			if(body.IsInGroup("Player"))
+			{
+				body.Call("BeDamaged", this, currentAttackCount, 1);
+			}
+		}
 	}
 
 	private void _on_FloorDetection_body_entered(Node2D body)
@@ -70,12 +111,39 @@ public class AICharacter : Character
 		if (body.IsInGroup("Ground") && groundDetection.GetOverlappingBodies().Count == 0)
 		{
 			canWalk = false;
-			turnAroundWaitTimer.Start(TurnAroundWaitTime);
+			turnAroundWaitTimer?.Start(TurnAroundWaitTime);
 			GD.Print("stop, don't touch it, call an adult");
 		}
 	}
 
+	private void _on_AttackDetectionArea_body_entered(Node2D body)
+	{
+		//the ai is only an enemy of player
+		if (body.IsInGroup("Character") && body.IsInGroup("Player"))
+		{
+			Attack();
+			canWalk = false;
+		}
+	}
+
+	private void _on_AttackDetectionArea_body_exited(Node2D body)
+	{
+		//the ai is only an enemy of player
+		if (body.IsInGroup("Character") && body.IsInGroup("Player"))
+		{
+			canWalk = true;
+			attackRepeatTimer.Stop();
+		}
+	}
+
+	protected override void onAnimatedSpriteAnimationFinished(string animName)
+	{
+		if (isAttacking)
+		{
+			isAttacking = false;
+			attackRepeatTimer.Start(AttackRepeatTime);
+		}
+		base.onAnimatedSpriteAnimationFinished(animName);	
+	}
+
 }
-
-
-
