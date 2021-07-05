@@ -34,7 +34,10 @@ public class AICharacter : Character
 	protected override void SetCharacterMovementScale(Vector2 scale)
 	{
 		base.SetCharacterMovementScale(scale);
-		groundDetection.Scale = scale;
+		if (Mathf.Abs(scale.x) >= 1 && Mathf.Abs(scale.y) >= 1)
+		{
+			groundDetection.Scale = scale;
+		}
 	}
 
 	public void TurnAround()

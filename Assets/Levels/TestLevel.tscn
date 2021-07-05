@@ -44,11 +44,13 @@ collision_mask = 3
 position = Vector2( -239.385, 54.1766 )
 shape = SubResource( 1 )
 
-[node name="StaticBody2D" type="StaticBody2D" parent="Ground"]
-position = Vector2( -238.125, -10.7093 )
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Ground/StaticBody2D"]
-shape = SubResource( 2 )
-
 [node name="Character2" parent="." instance=ExtResource( 3 )]
 position = Vector2( -149.048, -24.9054 )
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+position = Vector2( -238.125, -10.7093 )
+collision_layer = 3
+collision_mask = 3
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+shape = SubResource( 2 )

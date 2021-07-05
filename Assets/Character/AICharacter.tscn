@@ -20,5 +20,15 @@ __meta__ = {
 position = Vector2( 21.0425, 21.1959 )
 shape = SubResource( 1 )
 
+[node name="ColorRect" type="ColorRect" parent="FloorDetection" index="1"]
+margin_left = 13.0
+margin_top = 17.0
+margin_right = 29.0
+margin_bottom = 25.0
+color = Color( 0, 0, 0, 0.423529 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
 [connection signal="body_entered" from="FloorDetection" to="." method="_on_FloorDetection_body_entered"]
 [connection signal="body_exited" from="FloorDetection" to="." method="_on_FloorDetection_body_exited"]

@@ -156,8 +156,11 @@ public class Character : KinematicBody2D
 
 	protected virtual void SetCharacterMovementScale(Vector2 scale)
 	{
-		animatedSprite.Scale = scale;
-		attackArea.Scale = scale;
+		if (Mathf.Abs(scale.x) >= 1 && Mathf.Abs(scale.y) >= 1)
+		{
+			animatedSprite.Scale = scale;
+			attackArea.Scale = scale;
+		}
 	}
 
 	/**
