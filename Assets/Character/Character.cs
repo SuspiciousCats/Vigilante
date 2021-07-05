@@ -5,10 +5,16 @@ public class Character : KinematicBody2D
 {
 	public enum MovementType
 	{
+		//Character is just standing and doing nothing
 		Idle,
+		//Character is walking with default speed
 		Walk,
+		//Character is walking fast
 		Run,
-		Block
+		//Character is standing in block(guard) pose
+		Block,
+		//character is falling(but not dead or knocked down)
+		Air
 	}
 
 	#region ExportVaribles
@@ -80,10 +86,14 @@ public class Character : KinematicBody2D
 
 	public bool Dead => dead;
 
+	protected bool isPlayingAnim = false;
+
+	//value of IsOnTheGround() on the last update
+	protected bool lastIsOnTheGround = true;
 
 	public virtual bool CanUpdateAnimation()
 	{
-		return !isAttacking && !isBeingDamaged && !Dead;
+		return !isAttacking && !isBeingDamaged && !Dead && !isPlayingAnim;
 	}
 
 	public void BeDamaged(Node2D damager, int attackType, int damage = 1)
@@ -92,23 +102,23 @@ public class Character : KinematicBody2D
 		{
 
 			if(damager != null)
-            {
+			{
 				//we need to force chracter to turn towards the attacker
 				//this way there is no need to have as many animations
-                if ((Position.x - damager.Position.x) > 0)
-                {
+				if ((Position.x - damager.Position.x) > 0)
+				{
 					//on the right
 					SetCharacterMovementScale(new Vector2(-1, 1));
-                }
-                else
-                {
+				}
+				else
+				{
 					//on the left
 					SetCharacterMovementScale(new Vector2(1, 1));
 				}
-            }
+			}
 			Health -= damage;
 			isBeingDamaged = true;
-			animatedSprite?.Play(GetDamageAnimation(attackType));
+			PlayAnimation(GetDamageAnimation(attackType), true);
 
 			if (Health < 0)
 			{
@@ -149,6 +159,22 @@ public class Character : KinematicBody2D
 	{
 		animatedSprite.Scale = scale;
 		attackArea.Scale = scale;
+	}
+
+	/**
+	 * Plays animation while blocking default animation update
+	 * Useful for playing one time animations (like getting hit or jumping)
+	 * @animationName - Animation to plays
+	 * @allowOverride - Allow playing new animation over already playing one
+	 */
+	protected void PlayAnimation(string animationName,bool allowOverride = false)
+	{
+		if(allowOverride || !isPlayingAnim)
+		{
+			isPlayingAnim = true;
+			animatedSprite.Play(animationName);
+			GD.Print("Character " + Name + " is playing animation: " + animationName);
+		}
 	}
 
 	public virtual void Die()
@@ -207,6 +233,7 @@ public class Character : KinematicBody2D
 			if (Input.IsActionJustPressed("jump") && IsOnFloor())
 			{
 				velocity.y += JumpForce;
+				PlayAnimation("Jump_Start");
 			}
 		}
 
@@ -233,13 +260,20 @@ public class Character : KinematicBody2D
 
 	protected void UpdateMovementState()
 	{
-		if (Mathf.Abs(velocity.x) > 1)
+		if (IsOnFloor())
 		{
-			movementState = MovementType.Walk;
+			if (Mathf.Abs(velocity.x) > 1)
+			{
+				movementState = MovementType.Walk;
+			}
+			else
+			{
+				movementState = MovementType.Idle;
+			}
 		}
 		else
 		{
-			movementState = MovementType.Idle;
+			movementState = MovementType.Air;
 		}
 	}
 
@@ -251,7 +285,16 @@ public class Character : KinematicBody2D
 		{
 			UpdateInput(delta);
 		}
+
+		if(lastIsOnTheGround != IsOnFloor() && IsOnFloor())//not using collision detection because this is simplier
+		{
+			//we just landed
+			PlayAnimation("Jump_End");
+		}
+
 		UpdateMovementState();
+
+		lastIsOnTheGround = IsOnFloor();
 
 		velocity.y += Gravity * delta;
 
@@ -268,6 +311,7 @@ public class Character : KinematicBody2D
 						animatedSprite.Play("Idle_Normal");
 					}
 					break;
+
 				case MovementType.Walk:
 					if (animatedSprite.Animation != "Walk_Battle")
 					{
@@ -275,6 +319,7 @@ public class Character : KinematicBody2D
 					}
 					SetCharacterMovementScale(new Vector2(velocity.x / Mathf.Abs(velocity.x), 1));
 					break;
+
 				case MovementType.Run:
 					if (animatedSprite.Animation != "Run_Normal")
 					{
@@ -282,15 +327,24 @@ public class Character : KinematicBody2D
 					}
 					SetCharacterMovementScale(new Vector2(velocity.x / Mathf.Abs(velocity.x), 1));
 					break;
+
+				case MovementType.Air:
+					animatedSprite.Play("Air");
+					break;
+
 				default:
 					break;
 			}
 		}
 	}
+
 	private void _on_AnimatedSprite_animation_finished()
 	{
 		isAttacking = false;
 		isBeingDamaged = false;
+
+		isPlayingAnim = false;
+
 		attackResetTimer.Paused = false;
 		if (attackResetTimer.IsStopped() || _firstAttack)
 		{
