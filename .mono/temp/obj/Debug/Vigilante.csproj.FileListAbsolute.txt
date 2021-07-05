@@ -1,0 +1,8 @@
+C:\Projects\Vigilante\.mono\temp\bin\Debug\Vigilante.dll
+C:\Projects\Vigilante\.mono\temp\bin\Debug\Vigilante.pdb
+C:\Projects\Vigilante\.mono\temp\obj\Debug\Vigilante.csprojAssemblyReference.cache
+C:\Projects\Vigilante\.mono\temp\obj\Debug\Vigilante.AssemblyInfoInputs.cache
+C:\Projects\Vigilante\.mono\temp\obj\Debug\Vigilante.AssemblyInfo.cs
+C:\Projects\Vigilante\.mono\temp\obj\Debug\Vigilante.csproj.CoreCompileInputs.cache
+C:\Projects\Vigilante\.mono\temp\obj\Debug\Vigilante.dll
+C:\Projects\Vigilante\.mono\temp\obj\Debug\Vigilante.pdb

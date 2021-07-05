@@ -1,0 +1,43 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://Assets/Character/Character.tscn" type="PackedScene" id=1]
+
+[sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 601.665, 54.0647 )
+
+[node name="Node2D" type="Node2D"]
+
+[node name="ColorRect2" type="ColorRect" parent="."]
+margin_left = -332.895
+margin_top = -58.2163
+margin_right = -249.895
+margin_bottom = -1.21631
+color = Color( 0.282353, 0.113725, 0.113725, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Character" parent="." instance=ExtResource( 1 )]
+position = Vector2( -213.235, -68.1067 )
+
+[node name="Character2" parent="." instance=ExtResource( 1 )]
+position = Vector2( -161.117, -21.78 )
+ControlledByPlayed = false
+Health = 1
+
+[node name="ColorRect" type="ColorRect" parent="."]
+margin_left = -886.0
+margin_top = 1.0
+margin_right = 554.0
+margin_bottom = 62.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Ground" type="StaticBody2D" parent="."]
+collision_layer = 3
+collision_mask = 3
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ground"]
+position = Vector2( -239.385, 54.1766 )
+shape = SubResource( 1 )
