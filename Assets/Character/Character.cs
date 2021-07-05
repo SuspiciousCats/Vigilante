@@ -217,23 +217,33 @@ public class Character : KinematicBody2D
 
 	protected virtual void UpdateInput(float delta)
 	{
-		velocity.x = 0;
+		
 		if (CanUpdateAnimation())
 		{
-			if (Input.IsActionPressed("move_right"))
+			//only update velocity if we are on the ground where we can control it
+			//we also don't reset it, this way player's landing postion will be based on how fast were they running
+			if (lastIsOnTheGround)
 			{
-				velocity.x += MovementSpeed;
-			}
+				//reset velocity, because movement is meant to be snappy
+				velocity.x = 0;
 
-			if (Input.IsActionPressed("move_left"))
-			{
-				velocity.x -= MovementSpeed;
-			}
+				if (Input.IsActionPressed("move_right"))
+				{
+					//is player is holding run we start to run
+					//Note: player can not run in the air so we prevent that
+					velocity.x += MovementSpeed * (Input.IsActionPressed("run")? 2 : 1);
+				}
 
-			if (Input.IsActionJustPressed("jump") && IsOnFloor())
-			{
-				velocity.y += JumpForce;
-				PlayAnimation("Jump_Start");
+				if (Input.IsActionPressed("move_left"))
+				{
+					velocity.x -= MovementSpeed * (Input.IsActionPressed("run")? 2 : 1);
+				}
+
+				if (Input.IsActionJustPressed("jump"))
+				{
+					velocity.y += JumpForce;
+					PlayAnimation("Jump_Start");
+				}
 			}
 		}
 
@@ -264,7 +274,7 @@ public class Character : KinematicBody2D
 		{
 			if (Mathf.Abs(velocity.x) > 1)
 			{
-				movementState = MovementType.Walk;
+				movementState = Input.IsActionPressed("run") ? MovementType.Run : MovementType.Walk;
 			}
 			else
 			{
