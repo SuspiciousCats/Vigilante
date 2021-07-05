@@ -76,21 +76,24 @@ public class AICharacter : Character
 
 	protected override void Attack()
 	{
-		base.Attack();
-		isAttacking = true;
-		//attack the player
-		random.Randomize();
-
-		currentAttackCount = random.RandiRange(0, 2);
-		PlayAnimation(GetAttackAnimation());
-
-		attackRepeatTimer?.Stop();
-
-		foreach(PhysicsBody2D body in attackDetectionArea.GetOverlappingBodies())
+		if (!isBeingDamaged && !Dead)
 		{
-			if(body.IsInGroup("Player"))
+			base.Attack();
+			isAttacking = true;
+			//attack the player
+			random.Randomize();
+
+			currentAttackCount = random.RandiRange(0, 2);
+			PlayAnimation(GetAttackAnimation());
+
+			attackRepeatTimer?.Stop();
+
+			foreach (PhysicsBody2D body in attackDetectionArea.GetOverlappingBodies())
 			{
-				body.Call("BeDamaged", this, currentAttackCount, 1);
+				if (body.IsInGroup("Player"))
+				{
+					body.Call("BeDamaged", this, currentAttackCount, 1);
+				}
 			}
 		}
 	}
@@ -142,6 +145,10 @@ public class AICharacter : Character
 		{
 			isAttacking = false;
 			attackRepeatTimer.Start(AttackRepeatTime);
+		}
+		if(Dead)
+		{
+			QueueFree();
 		}
 		base.onAnimatedSpriteAnimationFinished(animName);	
 	}
