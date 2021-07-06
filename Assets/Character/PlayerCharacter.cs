@@ -72,36 +72,32 @@ public class PlayerCharacter : Character
 
 		if (CanUpdateAnimation())
 		{
-			//only update velocity if we are on the ground where we can control it
-			//we also don't reset it, this way player's landing postion will be based on how fast were they running
-			if (lastIsOnTheGround)
+			//reset velocity, because movement is meant to be snappy
+			velocity.x = 0;
+
+			if (CanMove)
 			{
-				//reset velocity, because movement is meant to be snappy
-				velocity.x = 0;
-
-				if (CanMove)
+				if (Input.IsActionPressed("move_right"))
 				{
-					if (Input.IsActionPressed("move_right"))
-					{
-						//is player is holding run we start to run
-						//Note: player can not run in the air so we prevent that
-						velocity.x += MovementSpeed * (Input.IsActionPressed("run") ? 2 : 1);
-					}
-
-					if (Input.IsActionPressed("move_left"))
-					{
-						velocity.x -= MovementSpeed * (Input.IsActionPressed("run") ? 2 : 1);
-					}
+					//is player is holding run we start to run
+					//Note: player can not run in the air so we prevent that
+					velocity.x += MovementSpeed * (Input.IsActionPressed("run") ? 2 : 1) * (!lastIsOnTheGround ? 0.5f : 1f);
 				}
 
-				if (Input.IsActionJustPressed("jump"))
+				if (Input.IsActionPressed("move_left"))
 				{
-					velocity.y += JumpForce;
-					PlayAnimation("Jump_Start");
+					velocity.x -= MovementSpeed * (Input.IsActionPressed("run") ? 2 : 1) * (!lastIsOnTheGround ? 0.5f : 1f);
 				}
-
-				blocking = Input.IsActionPressed("block");
 			}
+
+			if (Input.IsActionJustPressed("jump"))
+			{
+				velocity.y += JumpForce;
+				PlayAnimation("Jump_Start");
+			}
+
+			blocking = Input.IsActionPressed("block");
+
 		}
 
 		if (Input.IsActionJustPressed("attack") && !isAttacking && !Blocking)
