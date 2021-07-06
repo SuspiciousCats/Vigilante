@@ -18,6 +18,9 @@ public class AICharacter : Character
 	[Export]
 	public float AttackRepeatTime = 0.5f;
 
+	[Export(PropertyHint.Layers2dPhysics)]
+	public uint SightCastCollisionLayer = 0;
+
 	#region Fight
 
 	[Export]
@@ -32,11 +35,28 @@ public class AICharacter : Character
 
 	#endregion
 
+	/*
+	 * Current target 
+	 */
+	protected PlayerCharacter target;
+
+	/*
+	 * Current target 
+	 */
+	public PlayerCharacter Target => target;
+
 	protected bool canWalk = true;
+
+	#region Areas
 
 	protected Area2D groundDetection;
 
 	protected Area2D attackDetectionArea;
+
+	protected Area2D sightArea;
+
+	#endregion
+
 
 	protected Timer turnAroundWaitTimer;
 
@@ -87,6 +107,9 @@ public class AICharacter : Character
 			blockTimer.Connect("timeout", this, nameof(StartBlocking));
 			AddChild(blockTimer);
 		}
+
+		//there is no point in doing any checks because if there is no area it will never be called 
+		sightArea = GetNodeOrNull<Area2D>("Sight");
 	}
 
 	public override void BeDamaged(Node2D damager, int attackType, int damage = 1)
@@ -114,6 +137,10 @@ public class AICharacter : Character
 		{
 			groundDetection.Scale = scale;
 			attackDetectionArea.Scale = scale;
+			if(sightArea != null)
+			{
+				sightArea.Scale = scale;
+			}
 		}
 	}
 
@@ -124,11 +151,36 @@ public class AICharacter : Character
 		turnAroundWaitTimer.Stop();
 	}
 
+	public void UpdateAI()
+	{
+		if (target != null)
+		{
+			Physics2DDirectSpaceState spaceState = GetWorld2d().DirectSpaceState;
+			if (spaceState != null)
+			{
+				var result = spaceState.IntersectRay(GlobalPosition, target.GlobalPosition, new Godot.Collections.Array { this }, SightCastCollisionLayer);
+				if (result.Count > 0)
+				{
+					if(result["collider"] == target)
+					{
+						//we see the target				
+					}
+					else
+					{
+						//we don't see the target
+					}
+				}
+			}
+		}
+	}
+
 	public override void _PhysicsProcess(float delta)
 	{
 		//we only need to set the speed with which the charcater is walking
 		velocity.x = CanMove ? MovementSpeed * (WalkRight ? 1 : -1) : 0;
 		base._PhysicsProcess(delta);
+
+		UpdateAI();
 	}
 
 	protected override void Attack()
@@ -161,22 +213,6 @@ public class AICharacter : Character
 			{
 				debug_AttackIndicationLabel.Visible = false;
 				debug_AttackIndicationLabel.Text = "!";
-			}
-		}
-	}
-
-	protected override void UpdateInfo()
-	{
-		using (RichTextLabel label = GetNodeOrNull<RichTextLabel>("Info/HealthText"))
-		{
-			if (label != null)
-			{
-				label.Text = Health.ToString();
-				if (attackRepeatTimer != null)
-				{
-					label.Text += "\n";
-					label.Text = attackRepeatTimer.TimeLeft.ToString();
-				}
 			}
 		}
 	}
@@ -233,12 +269,7 @@ public class AICharacter : Character
 		blocking = true;
 		blockTimer.Stop();
 	}
-	public override void _Process(float delta)
-	{
-		base._Process(delta);
-		UpdateInfo();
 
-	}
 	protected override void onAnimatedSpriteAnimationFinished(string animName)
 	{
 		if (isAttacking)
@@ -269,4 +300,29 @@ public class AICharacter : Character
 		base.onAnimatedSpriteAnimationFinished(animName);
 	}
 
+	private void _on_Sight_body_entered(PhysicsBody2D body)
+	{
+		if(target == null)
+		{
+			if(body.IsInGroup("Character") && body.IsInGroup("Player") && !(body as Character).Dead/*ignore player's dead body*/)
+			{
+				target = body as PlayerCharacter;
+			}
+		}
+	}
+
+	protected virtual void OnTargetLost()
+	{
+		target = null;
+		attackRepeatTimer.Stop();
+		blocking = false;
+	}
+
+	private void _on_Sight_body_exited(PhysicsBody2D body)
+	{
+		if (target != null && body == target)
+		{
+			OnTargetLost();
+		}
+	}
 }

@@ -12,6 +12,7 @@ extents = Vector2( 5.83682, 18.8028 )
 [node name="Character" instance=ExtResource( 1 )]
 script = ExtResource( 2 )
 AttackRepeatTime = 1.0
+SightCastCollisionLayer = 16
 
 [node name="FloorDetection" type="Area2D" parent="." index="5"]
 collision_layer = 2
@@ -63,7 +64,27 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="Sight" type="Area2D" parent="." index="9"]
+__meta__ = {
+"_editor_description_": "Once player enters the area ot's added to the check list and each frame there is raytrace check for it"
+}
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Sight" index="0"]
+polygon = PoolVector2Array( 8, -16, 136, -56, 136, 48, 8, 0 )
+
+[node name="ColorRect" type="ColorRect" parent="Sight" index="1"]
+margin_left = 8.0
+margin_top = -48.0
+margin_right = 136.0
+margin_bottom = 40.0
+color = Color( 0.6, 0.219608, 0.2, 0.266667 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
 [connection signal="body_entered" from="FloorDetection" to="." method="_on_FloorDetection_body_entered"]
 [connection signal="body_exited" from="FloorDetection" to="." method="_on_FloorDetection_body_exited"]
 [connection signal="body_entered" from="AttackDetectionArea" to="." method="_on_AttackDetectionArea_body_entered"]
 [connection signal="body_exited" from="AttackDetectionArea" to="." method="_on_AttackDetectionArea_body_exited"]
+[connection signal="body_entered" from="Sight" to="." method="_on_Sight_body_entered"]
+[connection signal="body_exited" from="Sight" to="." method="_on_Sight_body_exited"]
