@@ -18,6 +18,20 @@ public class AICharacter : Character
 	[Export]
 	public float AttackRepeatTime = 0.5f;
 
+	#region Fight
+
+	[Export]
+	public bool CanBlock = false;
+
+	[Export]
+	/**
+	 * To prevent ai being too hard to fight ai will have an "opening" after each attack
+	 * Ai will only get back into block mode after this much time passes
+	 */
+	public float TimeBeforeBlock = 0.5f;
+
+	#endregion
+
 	protected bool canWalk = true;
 
 	protected Area2D groundDetection;
@@ -27,6 +41,8 @@ public class AICharacter : Character
 	protected Timer turnAroundWaitTimer;
 
 	protected Timer attackRepeatTimer;
+
+	protected Timer blockTimer;
 
 	protected RandomNumberGenerator random = new RandomNumberGenerator();
 
@@ -39,7 +55,7 @@ public class AICharacter : Character
 
 	#endregion
 
-	protected override bool CanMove => base.CanMove && canWalk; 
+	protected override bool CanMove => base.CanMove && canWalk;
 
 	public override void _Ready()
 	{
@@ -60,19 +76,36 @@ public class AICharacter : Character
 		attackRepeatTimer.Connect("timeout", this, nameof(Attack));
 		AddChild(attackRepeatTimer);
 
-		if(displayDebugInfo)
+		if (displayDebugInfo)
 		{
 			debug_AttackIndicationLabel = GetNodeOrNull<RichTextLabel>("DebugNodes/AttackIndication");
+		}
+
+		if(CanBlock)
+		{
+			blockTimer = new Timer();
+			blockTimer.Connect("timeout", this, nameof(StartBlocking));
+			AddChild(blockTimer);
 		}
 	}
 
 	public override void BeDamaged(Node2D damager, int attackType, int damage = 1)
 	{
 		base.BeDamaged(damager, attackType, damage);
-		if(!attackRepeatTimer.IsStopped())
+		if (!attackRepeatTimer.IsStopped())
 		{
-			attackRepeatTimer.Paused = true;
+			//if ai is allowed to block and is currently blocking -> we reset timer on hit
+			//this way spamming attack will not work against blocking characters
+			if (CanBlock && Blocking)
+			{
+				attackRepeatTimer.Start(AttackRepeatTime);
+			}
+			else
+			{
+				attackRepeatTimer.Paused = true;
+			}
 		}
+
 	}
 	protected override void SetCharacterMovementScale(Vector2 scale)
 	{
@@ -102,6 +135,10 @@ public class AICharacter : Character
 	{
 		if (!isBeingDamaged && !Dead)
 		{
+			if (blocking)
+			{
+				blocking = false;
+			}
 			base.Attack();
 			isAttacking = true;
 			//attack the player
@@ -122,7 +159,24 @@ public class AICharacter : Character
 
 			if (displayDebugInfo)
 			{
-				debug_AttackIndicationLabel.Visible = true;
+				debug_AttackIndicationLabel.Visible = false;
+				debug_AttackIndicationLabel.Text = "!";
+			}
+		}
+	}
+
+	protected override void UpdateInfo()
+	{
+		using (RichTextLabel label = GetNodeOrNull<RichTextLabel>("Info/HealthText"))
+		{
+			if (label != null)
+			{
+				label.Text = Health.ToString();
+				if (attackRepeatTimer != null)
+				{
+					label.Text += "\n";
+					label.Text = attackRepeatTimer.TimeLeft.ToString();
+				}
 			}
 		}
 	}
@@ -137,6 +191,7 @@ public class AICharacter : Character
 		}
 		GD.Print(body.Name);
 	}
+
 	private void _on_FloorDetection_body_exited(Node2D body)
 	{
 		//if detection doesn't detect ground any more -> stop, don't touch it, call an adult
@@ -168,6 +223,22 @@ public class AICharacter : Character
 		}
 	}
 
+	protected void StartBlocking()
+	{
+		if (displayDebugInfo)
+		{
+			debug_AttackIndicationLabel.Visible = true;
+			debug_AttackIndicationLabel.Text = "x";
+		}
+		blocking = true;
+		blockTimer.Stop();
+	}
+	public override void _Process(float delta)
+	{
+		base._Process(delta);
+		UpdateInfo();
+
+	}
 	protected override void onAnimatedSpriteAnimationFinished(string animName)
 	{
 		if (isAttacking)
@@ -176,19 +247,26 @@ public class AICharacter : Character
 			attackRepeatTimer.Start(AttackRepeatTime);
 			if (displayDebugInfo)
 			{
-				debug_AttackIndicationLabel.Visible = false;
+				if (!CanBlock)
+				{
+					debug_AttackIndicationLabel.Visible = false;
+					debug_AttackIndicationLabel.Text = "!";
+				}
+				else
+				{
+					blockTimer.Start(TimeBeforeBlock);
+				}
 			}
 		}
-		if(isBeingDamaged && attackRepeatTimer.Paused)
+		if (isBeingDamaged && attackRepeatTimer.Paused)
 		{
 			attackRepeatTimer.Paused = false;
-
 		}
-		if(Dead)
+		if (Dead)
 		{
 			QueueFree();
 		}
-		base.onAnimatedSpriteAnimationFinished(animName);	
+		base.onAnimatedSpriteAnimationFinished(animName);
 	}
 
 }

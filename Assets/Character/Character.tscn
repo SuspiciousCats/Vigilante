@@ -41,10 +41,10 @@ shape = SubResource( 2 )
 [node name="Info" type="Node2D" parent="."]
 
 [node name="HealthText" type="RichTextLabel" parent="Info"]
-margin_left = -3.0676
-margin_top = -35.3953
-margin_right = 34.9324
-margin_bottom = -20.3953
+margin_left = -3.0
+margin_top = -53.0
+margin_right = 118.0
+margin_bottom = -20.0
 text = "0"
 __meta__ = {
 "_edit_use_anchors_": false
