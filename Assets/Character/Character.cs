@@ -229,8 +229,6 @@ public class Character : KinematicBody2D
 	{
 		base._PhysicsProcess(delta);
 
-		
-
 		if(lastIsOnTheGround != IsOnFloor() && IsOnFloor())//not using collision detection because this is simplier
 		{
 			//we just landed
@@ -252,7 +250,6 @@ public class Character : KinematicBody2D
 				case MovementType.Idle:
 					if (animatedSprite.Animation != "Idle_Normal")
 					{
-						//animatedSprite.Scale = new Vector2(1, 1);
 						animatedSprite.Play("Idle_Normal");
 					}
 					break;
