@@ -30,6 +30,15 @@ public class AICharacter : Character
 
 	protected RandomNumberGenerator random = new RandomNumberGenerator();
 
+	#region Debug
+
+	[Export]
+	public bool displayDebugInfo = false;
+
+	protected RichTextLabel debug_AttackIndicationLabel;
+
+	#endregion
+
 	public override void _Ready()
 	{
 		base._Ready();
@@ -48,8 +57,21 @@ public class AICharacter : Character
 		attackRepeatTimer = new Timer();
 		attackRepeatTimer.Connect("timeout", this, nameof(Attack));
 		AddChild(attackRepeatTimer);
+
+		if(displayDebugInfo)
+		{
+			debug_AttackIndicationLabel = GetNodeOrNull<RichTextLabel>("DebugNodes/AttackIndication");
+		}
 	}
 
+	public override void BeDamaged(Node2D damager, int attackType, int damage = 1)
+	{
+		base.BeDamaged(damager, attackType, damage);
+		if(!attackRepeatTimer.IsStopped())
+		{
+			attackRepeatTimer.Paused = true;
+		}
+	}
 	protected override void SetCharacterMovementScale(Vector2 scale)
 	{
 		base.SetCharacterMovementScale(scale);
@@ -95,6 +117,11 @@ public class AICharacter : Character
 					body.Call("BeDamaged", this, currentAttackCount, 1);
 				}
 			}
+
+			if (displayDebugInfo)
+			{
+				debug_AttackIndicationLabel.Visible = true;
+			}
 		}
 	}
 
@@ -122,7 +149,7 @@ public class AICharacter : Character
 	private void _on_AttackDetectionArea_body_entered(Node2D body)
 	{
 		//the ai is only an enemy of player
-		if (body.IsInGroup("Character") && body.IsInGroup("Player"))
+		if (body.IsInGroup("Character") && body.IsInGroup("Player") && !(body as Character).Dead/*ignore player's dead body*/)
 		{
 			Attack();
 			canWalk = false;
@@ -145,6 +172,15 @@ public class AICharacter : Character
 		{
 			isAttacking = false;
 			attackRepeatTimer.Start(AttackRepeatTime);
+			if (displayDebugInfo)
+			{
+				debug_AttackIndicationLabel.Visible = false;
+			}
+		}
+		if(isBeingDamaged && attackRepeatTimer.Paused)
+		{
+			attackRepeatTimer.Paused = false;
+
 		}
 		if(Dead)
 		{

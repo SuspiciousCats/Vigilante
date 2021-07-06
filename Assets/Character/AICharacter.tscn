@@ -11,6 +11,7 @@ extents = Vector2( 5.83682, 18.8028 )
 
 [node name="Character" instance=ExtResource( 1 )]
 script = ExtResource( 2 )
+AttackRepeatTime = 1.0
 
 [node name="FloorDetection" type="Area2D" parent="." index="5"]
 collision_layer = 2
@@ -48,6 +49,19 @@ __meta__ = {
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackDetectionArea" index="1"]
 position = Vector2( 16.9913, 0.71701 )
 shape = SubResource( 2 )
+
+[node name="DebugNodes" type="Node2D" parent="." index="7"]
+
+[node name="AttackIndication" type="RichTextLabel" parent="DebugNodes" index="0"]
+visible = false
+margin_left = -2.99661
+margin_top = -35.3975
+margin_right = 7.00339
+margin_bottom = -14.3975
+text = "!"
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [connection signal="body_entered" from="FloorDetection" to="." method="_on_FloorDetection_body_entered"]
 [connection signal="body_exited" from="FloorDetection" to="." method="_on_FloorDetection_body_exited"]

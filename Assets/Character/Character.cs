@@ -95,11 +95,26 @@ public class Character : KinematicBody2D
 		return !isAttacking && !isBeingDamaged && !Dead && !isPlayingAnim;
 	}
 
-	public void BeDamaged(Node2D damager, int attackType, int damage = 1)
+	/**
+	 * This function is called whenever info is needed to be updated(when damaged, healed etc.)
+	 */
+	protected virtual void UpdateInfo()
+	{
+		//this code is placeholder and MUST be overriden in child classes
+		//so don't do base.UpdateInfo();
+		using (RichTextLabel label = GetNodeOrNull<RichTextLabel>("Info/HealthText"))
+		{
+			if (label != null)
+			{
+				label.Text = Health.ToString();
+			}
+		}
+	}
+
+	public virtual void BeDamaged(Node2D damager, int attackType, int damage = 1)
 	{
 		if (!Dead)
 		{
-
 			if(damager != null)
 			{
 				//we need to force chracter to turn towards the attacker
@@ -119,10 +134,11 @@ public class Character : KinematicBody2D
 			isBeingDamaged = true;
 			PlayAnimation(GetDamageAnimation(attackType), true);
 
-			if (Health < 0)
+			if (Health <= 0)
 			{
 				Die();
 			}
+			UpdateInfo();
 		}
 	}
 
@@ -202,6 +218,8 @@ public class Character : KinematicBody2D
 		base._Ready();
 		animatedSprite = GetNode<AnimatedSprite>("AnimatedSprite") ?? throw new NullReferenceException("Fatal Error! All characters need to have animated sprite");
 		attackArea = GetNode<Area2D>("AttackArea") ?? throw new NullReferenceException("Fatal Error! All characters need to have attack area");
+
+		UpdateInfo();
 	}
 
 	protected void UpdateMovementState()

@@ -21,6 +21,7 @@ _global_script_class_icons={
 [application]
 
 config/name="Vigilante"
+run/main_scene="res://Assets/Character/TestLevel.tscn"
 config/icon="res://icon.png"
 
 [gdnative]

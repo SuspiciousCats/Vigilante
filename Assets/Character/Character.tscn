@@ -38,4 +38,16 @@ wait_time = 0.1
 position = Vector2( 20.9244, 0.529724 )
 shape = SubResource( 2 )
 
+[node name="Info" type="Node2D" parent="."]
+
+[node name="HealthText" type="RichTextLabel" parent="Info"]
+margin_left = -3.0676
+margin_top = -35.3953
+margin_right = 34.9324
+margin_bottom = -20.3953
+text = "0"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
 [connection signal="animation_finished" from="AnimatedSprite" to="." method="_on_AnimatedSprite_animation_finished"]
