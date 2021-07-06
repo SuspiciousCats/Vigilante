@@ -39,6 +39,8 @@ public class AICharacter : Character
 
 	#endregion
 
+	protected override bool CanMove => base.CanMove && canWalk; 
+
 	public override void _Ready()
 	{
 		base._Ready();
@@ -92,7 +94,7 @@ public class AICharacter : Character
 	public override void _PhysicsProcess(float delta)
 	{
 		//we only need to set the speed with which the charcater is walking
-		velocity.x = canWalk ? MovementSpeed * (WalkRight ? 1 : -1) : 0;
+		velocity.x = CanMove ? MovementSpeed * (WalkRight ? 1 : -1) : 0;
 		base._PhysicsProcess(delta);
 	}
 

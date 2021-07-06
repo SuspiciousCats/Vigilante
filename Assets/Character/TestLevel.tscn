@@ -47,7 +47,7 @@ position = Vector2( -239.385, 54.1766 )
 shape = SubResource( 1 )
 
 [node name="Character2" parent="." instance=ExtResource( 3 )]
-position = Vector2( -149.048, -24.9054 )
+position = Vector2( -147.989, -24.3757 )
 displayDebugInfo = true
 
 [node name="StaticBody2D" type="StaticBody2D" parent="."]

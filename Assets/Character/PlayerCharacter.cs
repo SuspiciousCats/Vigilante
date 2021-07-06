@@ -79,16 +79,19 @@ public class PlayerCharacter : Character
 				//reset velocity, because movement is meant to be snappy
 				velocity.x = 0;
 
-				if (Input.IsActionPressed("move_right"))
+				if (CanMove)
 				{
-					//is player is holding run we start to run
-					//Note: player can not run in the air so we prevent that
-					velocity.x += MovementSpeed * (Input.IsActionPressed("run") ? 2 : 1);
-				}
+					if (Input.IsActionPressed("move_right"))
+					{
+						//is player is holding run we start to run
+						//Note: player can not run in the air so we prevent that
+						velocity.x += MovementSpeed * (Input.IsActionPressed("run") ? 2 : 1);
+					}
 
-				if (Input.IsActionPressed("move_left"))
-				{
-					velocity.x -= MovementSpeed * (Input.IsActionPressed("run") ? 2 : 1);
+					if (Input.IsActionPressed("move_left"))
+					{
+						velocity.x -= MovementSpeed * (Input.IsActionPressed("run") ? 2 : 1);
+					}
 				}
 
 				if (Input.IsActionJustPressed("jump"))
@@ -96,11 +99,14 @@ public class PlayerCharacter : Character
 					velocity.y += JumpForce;
 					PlayAnimation("Jump_Start");
 				}
+
+				blocking = Input.IsActionPressed("block");
 			}
 		}
 
-		if (Input.IsActionJustPressed("attack") && !isAttacking)
+		if (Input.IsActionJustPressed("attack") && !isAttacking && !Blocking)
 		{
+			//there should be air attack(which is just character being in attack pose until overlap)
 			Attack();
 		}
 	}

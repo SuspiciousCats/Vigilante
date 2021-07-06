@@ -90,6 +90,23 @@ public class Character : KinematicBody2D
 	//value of IsOnTheGround() on the last update
 	protected bool lastIsOnTheGround = true;
 
+	/*
+	 * This variable tells if cahracter WANTS to be blocking.
+	 *  If you want to know if character IS actually blocking use Blocking property
+	 */
+	protected bool blocking = false;
+
+	/*
+	 * Is character currently blocking
+	 */
+	public virtual bool Blocking => blocking && lastIsOnTheGround && !isAttacking;
+
+	/*
+	 * Is character allowed to move
+	 */
+	protected virtual bool CanMove => !Blocking;
+
+
 	public virtual bool CanUpdateAnimation()
 	{
 		return !isAttacking && !isBeingDamaged && !Dead && !isPlayingAnim;
@@ -130,9 +147,16 @@ public class Character : KinematicBody2D
 					SetCharacterMovementScale(new Vector2(1, 1));
 				}
 			}
-			Health -= damage;
-			isBeingDamaged = true;
-			PlayAnimation(GetDamageAnimation(attackType), true);
+			if (!Blocking)
+			{
+				Health -= damage;
+				isBeingDamaged = true;
+				PlayAnimation(GetDamageAnimation(attackType), true);
+			}
+			else
+			{
+				PlayAnimation("Block_Hit", true);
+			}
 
 			if (Health <= 0)
 			{
@@ -213,6 +237,8 @@ public class Character : KinematicBody2D
 		return false;
 	}
 
+	
+
 	public override void _Ready()
 	{
 		base._Ready();
@@ -232,7 +258,7 @@ public class Character : KinematicBody2D
 			}
 			else
 			{
-				movementState = MovementType.Idle;
+				movementState = Blocking? MovementType.Block : MovementType.Idle;
 			}
 		}
 		else
@@ -243,6 +269,52 @@ public class Character : KinematicBody2D
 
 	protected virtual void Attack() { }
 
+	/*
+	 * Sets current animation variables based on gameplay variables
+	 */
+	protected void UpdateAnimation()
+	{
+		switch (CurrentMovementState)
+		{
+			case MovementType.Idle:
+				if (animatedSprite.Animation != "Idle_Normal")
+				{
+					animatedSprite.Play("Idle_Normal");
+				}
+				break;
+
+			case MovementType.Walk:
+				if (animatedSprite.Animation != "Walk_Battle")
+				{
+					animatedSprite.Play("Walk_Battle");
+				}
+				SetCharacterMovementScale(new Vector2(velocity.x / Mathf.Abs(velocity.x), 1));
+				break;
+
+			case MovementType.Run:
+				if (animatedSprite.Animation != "Run_Normal")
+				{
+					animatedSprite.Animation = "Run_Normal";
+				}
+				SetCharacterMovementScale(new Vector2(velocity.x / Mathf.Abs(velocity.x), 1));
+				break;
+
+			case MovementType.Block:
+				if (animatedSprite.Animation != "Guard_Idle")
+				{
+					animatedSprite.Animation = "Guard_Idle";
+				}
+				break;
+
+			case MovementType.Air:
+				animatedSprite.Play("Air");
+				break;
+
+			default:
+				break;
+		}
+	}
+
 	public override void _PhysicsProcess(float delta)
 	{
 		base._PhysicsProcess(delta);
@@ -252,9 +324,10 @@ public class Character : KinematicBody2D
 			//we just landed
 			PlayAnimation("Jump_End");
 		}
-
+		//set which type of movement is character currently doing
 		UpdateMovementState();
-
+		
+		//save value of this variable to avoid calling the function each time and to be able to compare it with previous frames
 		lastIsOnTheGround = IsOnFloor();
 
 		velocity.y += Gravity * delta;
@@ -263,38 +336,7 @@ public class Character : KinematicBody2D
 
 		if (CanUpdateAnimation())
 		{
-			switch (CurrentMovementState)
-			{
-				case MovementType.Idle:
-					if (animatedSprite.Animation != "Idle_Normal")
-					{
-						animatedSprite.Play("Idle_Normal");
-					}
-					break;
-
-				case MovementType.Walk:
-					if (animatedSprite.Animation != "Walk_Battle")
-					{
-						animatedSprite.Play("Walk_Battle");
-					}
-					SetCharacterMovementScale(new Vector2(velocity.x / Mathf.Abs(velocity.x), 1));
-					break;
-
-				case MovementType.Run:
-					if (animatedSprite.Animation != "Run_Normal")
-					{
-						animatedSprite.Animation = "Run_Normal";
-					}
-					SetCharacterMovementScale(new Vector2(velocity.x / Mathf.Abs(velocity.x), 1));
-					break;
-
-				case MovementType.Air:
-					animatedSprite.Play("Air");
-					break;
-
-				default:
-					break;
-			}
+			UpdateAnimation();
 		}
 	}
 
